@@ -25,6 +25,10 @@ impl Angle {
         let Vec2f {x, y} = self.get_vec();
         return y.atan2(x);
     }
+    pub fn slope(&self) -> f32 {
+        let vec = self.get_vec();
+        return vec.y / vec.x;
+    }
     pub fn write(&self,f: &mut fmt::Formatter) -> fmt::Result {
 	// Write strictly the first element into the supplied output
         // stream: `f`. Returns `fmt::Result` which indicates whether the
