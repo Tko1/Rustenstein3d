@@ -1,3 +1,5 @@
+use std::fmt;
+
 #[derive(Debug,Copy,Clone)]
 pub struct Vec2<T> {
     pub x: T,
@@ -12,7 +14,7 @@ impl<T> Vec2<T> {
     }
 } 
 
-#[derive(Debug,Copy,Clone)]
+#[derive(Copy,Clone)]
 pub struct Angle(pub Vec2f);
 
 impl Angle {
@@ -22,6 +24,13 @@ impl Angle {
     {
         let Vec2f {x, y} = self.get_vec();
         return y.atan2(x);
+    }
+    pub fn write(&self,f: &mut fmt::Formatter) -> fmt::Result {
+	// Write strictly the first element into the supplied output
+        // stream: `f`. Returns `fmt::Result` which indicates whether the
+        // operation succeeded or failed. Note that `write!` uses syntax which
+        // is very similar to `println!`.
+	write!(f, "Angle{{{:?}}}[As Rad?: {} , As Degrees: {}]", self.0,self.get_rad(),self.get_rad().to_degrees())
     }
 }
 
@@ -33,3 +42,18 @@ impl ToAngle for f32 {
         Angle(Vec2f::new(self.cos(),self.sin()))
     }
 }
+
+impl fmt::Display for Angle {
+    // This trait requires `fmt` with this exact signature.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+	self.write(f)
+    }
+}
+
+impl fmt::Debug for Angle {
+    // This trait requires `fmt` with this exact signature.
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+	self.write(f)
+    }
+}
+
