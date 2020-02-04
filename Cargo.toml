@@ -8,3 +8,10 @@ edition = "2018"
 
 [dependencies]
 glium = "*"
+float-cmp = "*"
+num = "*"
+piston2d-graphics = "*"
+piston = "*"
+pistoncore-glutin_window = "*"
+piston2d-opengl_graphics = "*"
+rand = "*"
