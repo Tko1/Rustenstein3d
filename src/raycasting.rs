@@ -91,7 +91,6 @@ impl Camera {
     pub fn raycast(&self) {
         let view_ang_rad = self.horizontal_view_angle.get_rad();
         let rot_rad = self.rotation.get_rad();
-        assert!(view_ang_rad >= 0.0 && rot_rad >= 0.0);
 
         // The ray angle pointing from our leftmost line of vision 
         let view_rad_right = rot_rad - (view_ang_rad / 2.0);
@@ -104,7 +103,7 @@ impl Camera {
             let total_view_rad = view_rad_left - view_rad_right;
             let total_ray_divisions = (ray_count - 1) as f32;
 
-            (view_rad_right + x * total_view_rad / total_ray_divisions).to_angle()
+            (view_rad_right + (ray_count as f32 - x) * total_view_rad / total_ray_divisions).to_angle()
         }).collect::<Vec<Angle>>();
         
         println!("{:?}",ray_angles);
