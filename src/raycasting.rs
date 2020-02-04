@@ -130,33 +130,102 @@ impl Camera {
 	    let y0 = py - ray_slope * px;
 	    ray_slope * x + y0
         };
-        let get_ray_next_tile_cross = |map: Map,pos: Vec2f, angle : Angle| -> Vec2f
+        let get_ray_next_tile_cross = |pos: Vec2f,angle : Angle| -> Vec2f
         {
+            // The difference is we may 'nudge' this position off a tile edge if it starts on one
+            let mut starting_pos = pos;
+	    
+	    //let is_already_on_tile = f32_equ(px,px.ceil()) || f32_equ(py,py.ceil());
+	    let already_on_tile_x = f32_equ(starting_pos.x,
+					    starting_pos.x.ceil());
+	    let already_on_tile_y = f32_equ(starting_pos.y,
+					    starting_pos.y.ceil());
             
-            let Vec2f {x: px, y: py} = pos;
-            // |     |       <--- y_from_tile (and the overall rectangle this makes in the corner is the rectangle)
+	    // TODO add more precise solution that won't ever go through walls
+	    if already_on_tile_x || already_on_tile_y {
+		
+		starting_pos = starting_pos + (angle.0 * 0.00001);
+	    }
+	    
+	    let mut px = starting_pos.x;
+	    let mut py = starting_pos.y;
+
+	    // |     |       <--- y_from_tile (and the overall rectangle this makes in the corner is the rectangle)
             // |     .----   <--- x_from_tile (and the dot is (px,py))
-            // |_________|   
+            // |_________|
+	    //
+	    // |             <--- y_from_last_tile 
+            // |----.        <--- x_from_last_tile (and the dot is (px,py))
+            // |____|____|
+	    
             let (x_from_tile,y_from_tile) = (px.ceil() - px, py.ceil() - py);
+	    let (x_from_last_tile,y_from_last_tile) = (px.floor() - px, py.floor() - py);
+	    // There are 4 potential rectangle_slopes:
+	    // If we are heading north to east:   
             // |     | _ /   <-- rectangle_slope  (a ray from our pos that perfectly exits through our tile corner)
             // |     /----                        If our ray is above this, it exits through the top
             // |_________|                        If our ray slopes below this, it exits through the right
-            let rectangle_slope = y_from_tile / x_from_tile;
+	    // If we are heading north to west 
+	    // |\   |    |   <-- rectangle_slope  (a ray from our pos that perfectly exits through our tile corner)
+            // |___\ .   |                        If our ray is above this, it exits through the top
+            // |_________|                        If our ray slopes below this, it exits through the left
+	    // If we are heading west to south 
+	    // |         | <-- rectangle_slope  (a ray from our pos that perfectly exits through our tile corner)
+            // | ___/    |                       If our ray is above this, it exits through the left
+            // |/________|                       If our ray slopes below this, it exits through the bottom
+	    // If we are heading south to east
+	    // |         |                       (a ray from our pos that perfectly exits through our tile corner)
+            // |   \__   | <-- rectangle_slope   If our ray is above this (..well, 'below' technically since
+            // |________\|                       the slopes are negative, and
+	    //                                   higher rising = more negative = 'lower' slope)
+	    //                                   If our ray slopes below this, it exits through the bottom
+	    
+            let rectangle_slope =
+		//We are moving south west,  so our 'rectangle' is likewise the southwest rectangle 
+		if angle.0.x < 0.0 && angle.0.y < 0.0 {     
+		    y_from_last_tile / x_from_last_tile
+		    //We are moving north west,  so our 'rectangle' is likewise the southwest rectangle
+		} else if angle.0.x < 0.0 && angle.0.y >= 0.0 {
+		     y_from_tile / x_from_last_tile
+		} else if angle.0.x >= 0.0 && angle.0.y < 0.0 {
+		    y_from_last_tile / x_from_tile
+		} else {
+		    y_from_tile / x_from_tile
+		};
             let ray_slope = angle.slope();
 
 	    // This means we will cross at the next y, or py.ceil()
-	    if ray_slope > rectangle_slope {
-		let next_x = y_to_x(ray_slope,pos,py.ceil());
-		return Vec2f::new(next_x,py.ceil());
-            }
+	    if ray_slope > rectangle_slope && rectangle_slope >= 0.0 ||
+		ray_slope < rectangle_slope && rectangle_slope < 0.0 {
+		    let next_y = if angle.0.y < 0.0{ py.floor() } else { py.ceil() };
+		    let next_x = y_to_x(ray_slope,starting_pos,next_y);
+		    Vec2f::new(next_x,next_y)
+		}
             // We cross at the next x
-            else if ray_slope < rectangle_slope {
-		let next_y = x_to_y(ray_slope,pos,px.ceil());
-		return Vec2f::new(px.ceil(),next_y);
-            }
+            else if ray_slope < rectangle_slope && rectangle_slope >= 0.0 ||
+	        ray_slope > rectangle_slope && rectangle_slope < 0.0 {
+		    let next_x = if angle.0.x < 0.0 { px.floor() } else { px.ceil() };
+		    let next_y = x_to_y(ray_slope,starting_pos,next_x);
+		    Vec2f::new(next_x,next_y)
+		}
             // If ray_slope = rectangle_slope, go to px.ceil(),py.ceil()
-            else { 
-                return Vec2f::new(px.ceil(),py.ceil());
+            else {
+		let mut next_x = 0.0;
+		let mut next_y = 0.0;
+		if angle.0.x < 0.0 {
+		    next_x = px.floor();
+		}
+		if angle.0.x >= 0.0 {
+		    next_x = px.ceil();
+		}
+		if angle.0.y < 0.0 {
+		    next_y = py.floor();
+		}
+		if angle.0.y >= 0.0 {
+		    next_y = py.ceil();
+		}
+                Vec2f::new(next_x,next_y)
+		
             }
 
         };
