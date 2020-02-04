@@ -2,9 +2,31 @@ use crate::math::Vec2f;
 use crate::math::Angle;
 use crate::math::ToAngle;
 
-const DEFAULT_VIEW_WIDTH : i32 = 5;
+/*
+TODO Consider representing everything with fixed point numbers instead of floats. 
 
-enum MapEntity {
+I don't know if we need the inflated range of a float, but I am at a
+part in the raycasting algorithm where I want to be sure that the
+imprecision of floats does not cause a ray to slip through a tile. The
+reasoning is when trying to jump to the next tile on a ray of light's
+path, we may land very close to a corner, but not quite on it.  During
+the next iteration, when trying to see what tile we're starting with,
+it will have to see which of your coords (x, y, or both) falls on a
+whole number -- so something like x == x.ceil(), y == y.ceil()
+
+EXCEPT we're dealing with floats,  they aren't precise and you have to check
+if they instead are very close, rather than seeing if they fall exactly on the same value.  
+Its the same reason if you have two blurry photos of the same exact image,  you don't try to see 
+if they blur the exact same way, you will try to approximate that their intended colors are very close.  
+The blur here is the loss of precision, and we face the same thing here -- blurry boundaries, blurry corners. 
+
+I'd rather see what happens first however before messing with it. 
+*/
+use self::MapEntity::{Wall,Floor};
+
+const DEFAULT_VIEW_WIDTH : i32 = 640;
+
+pub enum MapEntity {
     Wall,
     Floor,
     Enemy,
