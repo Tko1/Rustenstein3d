@@ -42,6 +42,18 @@ impl Vec2f {
 	let factor = magnitude / self.magnitude();
 	Vec2f::new(self.x * factor, self.y * factor)
     }
+    pub fn forward(&self) -> Vec2f
+    {
+	self.of_magnitude(1.0)
+    }
+    pub fn rotate(&self,angle: f32) -> Vec2f {
+	let x = if self.x == 0.0 { 0.00001 } else { self.x };
+	let y = if self.y == 0.0 { 0.00001 } else { self.y };
+	Vec2f::new(
+	    x * angle.cos() - y * angle.sin(),
+	    x * angle.sin() + y * angle.cos()
+	)
+    }
 }
 
 impl ops::Add<Vec2f> for Vec2f {
@@ -74,12 +86,7 @@ impl Angle {
         return vec.y / vec.x;
     }
     pub fn rotate(&self,angle: f32) -> Angle {
-	let x = if self.0.x == 0.0 { 0.01 } else { self.0.x };
-	let y = if self.0.y == 0.0 { 0.01 } else { self.0.y };
-	Angle::new(
-	    x * angle.cos() - y * angle.sin(),
-	    x * angle.sin() + y * angle.cos()
-	)
+	Angle(self.0.rotate(angle))
     }
     pub fn write(&self,f: &mut fmt::Formatter) -> fmt::Result {
 	// Write strictly the first element into the supplied output
