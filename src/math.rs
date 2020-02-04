@@ -1,18 +1,62 @@
+extern crate num;
+
 use std::fmt;
+use std::ops;
+use num::Integer;
+use num::Float;
 
 #[derive(Debug,Copy,Clone)]
 pub struct Vec2<T> {
     pub x: T,
     pub y: T
 }
-
 pub type Vec2f = Vec2<f32>;
 
 impl<T> Vec2<T> {
     pub fn new(x : T,y : T) -> Vec2<T> {
         Vec2 {x: x, y: y}
     }
-} 
+}
+
+impl Vec2f {
+    /*
+    Make no mistake,  this is more for position like Vec2fs, but I don't want 
+    to wrap everything in a newtype, I have found in Haskell in trying to 
+    take type wrapping and type power to its extreme that sometimes in short 
+    scoped projects, its just not worth it
+     */
+    pub fn distance(&self,other: &Vec2f) -> f32
+    {
+	let dx = (other.x - self.x).abs();
+	let dy = (other.y - self.y).abs();
+	// TODO: sometimes I'm ending with expressions, sometimes with
+	// return statements. Pick a side 
+	(dx.powi(2) + dy.powi(2)).sqrt()
+    }
+    pub fn magnitude(&self) -> f32
+    {
+	(self.x.powi(2) + self.y.powi(2)).sqrt()
+    }
+    pub fn of_magnitude(&self,magnitude: f32) -> Vec2f
+    {
+	let factor = magnitude / self.magnitude();
+	Vec2f::new(self.x * factor, self.y * factor)
+    }
+}
+
+impl ops::Add<Vec2f> for Vec2f {
+    type Output = Vec2f;
+    fn add(self,_rhs: Vec2f) -> Vec2f {
+	Vec2f::new(self.x + _rhs.x, self.y + _rhs.y)
+    }
+}
+
+impl ops::Mul<f32> for Vec2f {
+    type Output = Vec2f;
+    fn mul(self,_rhs: f32) -> Vec2f {
+	Vec2f::new(self.x * _rhs, self.y * _rhs)
+    }
+}
 
 #[derive(Copy,Clone)]
 pub struct Angle(pub Vec2f);
@@ -28,6 +72,14 @@ impl Angle {
     pub fn slope(&self) -> f32 {
         let vec = self.get_vec();
         return vec.y / vec.x;
+    }
+    pub fn rotate(&self,angle: f32) -> Angle {
+	let x = if self.0.x == 0.0 { 0.01 } else { self.0.x };
+	let y = if self.0.y == 0.0 { 0.01 } else { self.0.y };
+	Angle::new(
+	    x * angle.cos() - y * angle.sin(),
+	    x * angle.sin() + y * angle.cos()
+	)
     }
     pub fn write(&self,f: &mut fmt::Formatter) -> fmt::Result {
 	// Write strictly the first element into the supplied output
@@ -60,4 +112,3 @@ impl fmt::Debug for Angle {
 	self.write(f)
     }
 }
-
