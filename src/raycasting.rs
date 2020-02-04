@@ -77,10 +77,10 @@ pub struct Camera {
 impl Default for Camera {
     fn default() -> Camera {
         Camera {
-            transform: Transform::new(0.0,0.0),
+            transform: Transform::new(1.1,1.1),
             rotation: Angle::new(0.0,0.0),
-            horizontal_view_angle: Angle::new(-1.0,1.0),
-            vertical_view_angle: Angle::new(-1.0,1.0),
+            horizontal_view_angle: Angle::new(1.0,1.0),
+            vertical_view_angle: Angle::new(1.0,1.0),
             view_width: DEFAULT_VIEW_WIDTH
         }
     }
