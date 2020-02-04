@@ -93,7 +93,7 @@ fn f32_equ(a: f32,b: f32) -> bool
 impl Camera {
     /// For now,  everything will be thrown in here before being divvied up
     /// See documentation at docs/raycast.org 
-    pub fn raycast(&self) {
+    pub fn raycast_explicit(&self,world_map: &Map) -> Vec<(Angle,f32)>{
         let view_ang_rad = self.horizontal_view_angle.get_rad();
         let rot_rad = self.rotation.get_rad();
 
@@ -111,7 +111,6 @@ impl Camera {
             (view_rad_right + (ray_count as f32 - x) * total_view_rad / total_ray_divisions).to_angle()
         }).collect::<Vec<Angle>>();
         
-        println!("{:?}",ray_angles);
 
         let Transform(pos) = self.transform;
 
@@ -232,17 +231,62 @@ impl Camera {
                 Vec2f::new(next_x,next_y)
 		
             }
-
+	    
         };
-	let ray_lengths = ray_angles.into_iter().map(|x| {
-	    
-	}).collect::<Vec<()>>();
-        let mut ray_length = 0;
-	/*
-	for ray_angle in ray_angles {
-	    let ray_slope = ray_angle.slope();	    
-	    
-	}
-	 */
+	ray_angles.into_iter().map(|ray_angle| {
+	    let mut curr_pos = pos;
+	    let mut has_collided = false;
+	    let mut ray_length : f32 = 0.0;
+	    // Unfortunately, some angles are getting into infinite loops, despite rendering correctly
+	    // Until this bug is found, here's some safety wheels
+	    let max_recur = 100;
+	    let mut curr_recur = 0;
+	    while !has_collided {
+		curr_recur += 1;
+		if curr_recur >= max_recur { break;}
+
+		let next_cross = get_ray_next_tile_cross(curr_pos,ray_angle);
+		let Vec2f{x: mut next_x, y: mut next_y} = next_cross;
+
+		if ray_angle.0.x < 0.0 && f32_equ(next_x, next_x.floor()) {
+		    next_x -= 1.0;
+		}
+		if ray_angle.0.y < 0.0 && f32_equ(next_y,next_y.floor()){
+		    next_y -= 1.0;
+		}
+		
+		if next_x < 0.0 { next_x = 0.0; }
+		if next_y < 0.0 { next_y = 0.0; }
+
+		
+		
+		let next_x_int = next_x as usize;
+		let next_y_int = next_y as usize;
+		
+		if next_x_int >= world_map.len() ||
+		    next_y_int >= world_map[0].len() ||
+		    next_x_int == 0 ||
+		    next_y_int == 0
+		{
+		    ray_length = next_cross.distance(&pos);
+		    has_collided = true;
+		}
+		else { 
+		    match world_map[next_x_int][next_y_int] {
+			Wall => {
+			    ray_length = next_cross.distance(&pos);
+			    has_collided = true;
+			},
+			_ => curr_pos = next_cross,
+		    };
+		}
+	    }
+	    (ray_angle,ray_length)
+	     
+	}).collect::<Vec<(Angle,f32)>>()
     }
+    pub fn raycast(&self,world_map: &Map) -> Vec<f32>{
+	self.raycast_explicit(world_map).into_iter().map(|(_,len)| len).collect::<Vec<f32>>()
+    }
+    
 }
