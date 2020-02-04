@@ -1,6 +1,8 @@
 use crate::math::Vec2f;
 use crate::math::Angle;
 use crate::math::ToAngle;
+use rand::Rng;
+use float_cmp::ApproxEq;
 
 /*
 TODO Consider representing everything with fixed point numbers instead of floats. 
@@ -36,8 +38,27 @@ pub enum MapEntity {
 /// TODO Wrap in newtype?
 /// For now,  would like to get a prototype up and running
 /// and I want all the 2d vector syntax automatically for now
-type Map = Vec<Vec<MapEntity>>;
-
+pub type Map = Vec<Vec<MapEntity>>;
+/// 1. MapT? I am writing the trait to add functions to our Map, which
+///    I didn't newtype but alised instead, but is this really right?
+///    "MapT" definitely does not seem idiomatic
+/// TODO just use a newtype as originally intended 
+pub trait MapT {
+    fn default() -> Map;
+}
+impl MapT for Map{
+    fn default() -> Map {
+	vec![vec![Wall, Wall, Wall, Wall, Wall,Wall,Wall,Wall],
+	     vec![Wall, Wall,Floor, Floor, Floor,Floor,Wall,Wall],
+	     vec![Wall, Floor, Wall, Floor, Wall,Floor,Floor,Wall],
+	     vec![Wall, Floor, Wall, Floor, Wall,Floor,Floor,Wall],
+	     vec![Wall, Floor, Wall, Floor, Wall,Floor,Floor,Wall],
+	     vec![Wall, Floor, Wall, Wall, Wall,Floor,Floor,Wall],
+	     vec![Wall, Floor, Floor, Floor, Floor,Floor,Floor,Wall],
+	     vec![Wall, Wall, Floor, Floor, Floor,Floor,Wall,Wall],
+	     vec![Wall, Wall, Wall, Wall, Wall, Wall,Wall,Wall]]
+    }
+}
 pub struct Transform(pub Vec2f);
 impl Transform {
     fn new(x:f32,y:f32) -> Transform {
