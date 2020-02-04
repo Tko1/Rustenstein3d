@@ -85,6 +85,11 @@ impl Default for Camera {
         }
     }
 }
+/// Just a wrapper on approx equal that bakes in the levels of precision we will use 
+fn f32_equ(a: f32,b: f32) -> bool 
+{
+    a.approx_eq(b,(0.0,3))
+}
 impl Camera {
     /// For now,  everything will be thrown in here before being divvied up
     /// See documentation at docs/raycast.org 
